@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from pydantic import Field
 
-from app.schemas.dtos.user import SignUpRequestDTO
+from app.schemas.dtos.user import UserCreateRequestDTO
 from app.utils.hash import hash_password
 
 class SignUpRequestBody(BaseModel):
@@ -10,8 +10,8 @@ class SignUpRequestBody(BaseModel):
     password: str = Field(..., description="User password")
     phone_number: str = Field(..., description="User phone number")
 
-    def to_sign_up_request_dto(self) -> SignUpRequestDTO:
-        return SignUpRequestDTO(
+    def to_sign_up_request_dto(self) -> UserCreateRequestDTO:
+        return UserCreateRequestDTO(
             name=self.name,
             email=self.email,
             hashed_password=hash_password(self.password),

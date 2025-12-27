@@ -10,7 +10,7 @@ from app.db.session import get_db
 from app.db.models.user.user import User
 
 from app.schemas.model_dtos.user import UserModelDTO
-from app.schemas.dtos.user import SignUpRequestDTO
+from app.schemas.dtos.user import UserCreateRequestDTO
 
 class UserRepository:
     def __init__(self, db: AsyncSession) -> None:
@@ -30,7 +30,7 @@ class UserRepository:
 
         return UserModelDTO.from_model(user) if user else None
     
-    async def create(self, user: SignUpRequestDTO) -> UserModelDTO:
+    async def create(self, user: UserCreateRequestDTO) -> UserModelDTO:
         now = datetime.utcnow()
         id = uuid4()
         new_user = User(
