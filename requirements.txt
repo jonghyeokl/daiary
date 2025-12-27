@@ -5,3 +5,7 @@ asyncpg
 python-dotenv
 alembic
 greenlet
+passlib[bcrypt]==1.7.4
+orjson==3.9.14
+asyncpg
+bcrypt==4.1.3

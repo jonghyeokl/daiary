@@ -1,19 +1,39 @@
 import os
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+
+import orjson
+from dotenv import load_dotenv
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-def get_database_url() -> str:
-    return os.environ["DATABASE_URL"]
+from app.utils.orjson_serializer import orjson_serializer
 
-def get_engine() -> AsyncEngine:
-    return create_async_engine(
-        get_database_url(),
-        pool_pre_ping=True,
-    )
+if os.getenv("DATABASE_URL") is None:
+    load_dotenv(".env")
 
-# 앱 전체에서 재사용할 세션 팩토리
-async_session_factory = sessionmaker(
-    bind=get_engine(),
-    class_=AsyncSession,
-    expire_on_commit=False,
+async_engine = create_async_engine(
+    os.getenv("DATABASE_URL"),
+    future=True,
+    pool_pre_ping=True,
+    json_serializer=orjson_serializer,
+    json_deserializer=orjson.loads,
+    pool_size=200,
+    pool_timeout=30,
+    pool_recycle=500,
+    max_overflow=10,
 )
+
+session = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=async_engine,
+    expire_on_commit=False,
+    class_=AsyncSession,
+)
+
+async def get_db() -> AsyncSession:
+    db = session()
+    try:
+        yield db
+    finally:
+        await db.close()
