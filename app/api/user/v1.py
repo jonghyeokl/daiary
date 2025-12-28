@@ -60,6 +60,7 @@ async def login(
     email: str = Body(..., embed=True),
     password: str = Body(..., embed=True),
     user_repository: UserRepository = Depends(UserRepository.build),
+    jwt_service: JwtService = Depends(JwtService.build),
 ) -> str:
     user = await user_repository.find_by_email(email)
     if not user:
@@ -68,7 +69,7 @@ async def login(
     if not verify_password(password, user.hashed_password):
         raise InvalidCredentialsException()
 
-    return JwtService.create_access_token(user.user_id)
+    return jwt_service.create_access_token(user.user_id)
 
 @router.patch(
     "/update-password",
