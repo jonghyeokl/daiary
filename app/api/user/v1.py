@@ -5,13 +5,13 @@ from fastapi import Body
 from app.exceptions.user import EmailAlreadyExistsException
 from app.exceptions.user import EmailNotFoundException
 from app.exceptions.user import InvalidCredentialsException
+from app.exceptions.user import UserNotFoundException
 from app.repositories.user import UserRepository
 from app.schemas.apis.requests.user import SignUpRequestBody, UpdatePasswordRequestBody
 from app.schemas.apis.responses.custom_error import CustomErrorExample
 from app.schemas.apis.responses.custom_error import CustomErrorResponse
 
-from app.core.security import create_access_token
-from app.core.dependencies import get_current_user
+from app.services.jwt import JwtService
 from app.utils.hash import verify_password, hash_password
 
 router = APIRouter()
@@ -42,6 +42,7 @@ async def sign_up(
 
 @router.post(
     "/login",
+    response_model=str,
     responses = {
         403: CustomErrorResponse(
             examples=[
@@ -59,7 +60,7 @@ async def login(
     email: str = Body(..., embed=True),
     password: str = Body(..., embed=True),
     user_repository: UserRepository = Depends(UserRepository.build),
-):
+) -> str:
     user = await user_repository.find_by_email(email)
     if not user:
         raise EmailNotFoundException()
@@ -67,8 +68,7 @@ async def login(
     if not verify_password(password, user.hashed_password):
         raise InvalidCredentialsException()
 
-    access_token = create_access_token(user.id)
-    return {"access_token": access_token, "token_type": "bearer"}
+    return JwtService.create_access_token(user.user_id)
 
 @router.patch(
     "/update-password",
@@ -86,20 +86,17 @@ async def login(
 async def update_password(
     request_body: UpdatePasswordRequestBody,
     user_repository: UserRepository = Depends(UserRepository.build),
-    token_payload: dict = Depends(get_current_user),
+    jwt_service: JwtService = Depends(JwtService.build),
 ) -> None:
+    user_id = jwt_service.validate_access_token(request_body.access_token)
+    user = await user_repository.find_by_user_id(user_id)
 
-    user_id = token_payload.get("sub")
-    user = await user_repository.find_by_id(user_id)
     if not user:
-        raise InvalidCredentialsException()
-    
-    update_password_request_dto = request_body.to_update_password_request_dto()
+        raise UserNotFoundException()
 
-    if not verify_password(update_password_request_dto.current_password, user.hashed_password):
+    if not verify_password(request_body.current_password, user.hashed_password):
         raise InvalidCredentialsException()
-    
-    new_hashed_password = hash_password(update_password_request_dto.new_password)
-    user.hashed_password = new_hashed_password
-    await user_repository.update(user)
-    return None
+
+    new_hashed_password = hash_password(request_body.new_password)
+
+    await user_repository.update_by_user_id(user_id, new_hashed_password)

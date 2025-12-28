@@ -6,6 +6,7 @@ class UserException403Code(Exception403CodeBase):
     EMAIL_ALREADY_EXISTS = -14040
     EMAIL_NOT_FOUND = -14041
     INVALID_CREDENTIALS = -14042
+    USER_NOT_FOUND = -14043
 
     def to_str(self) -> str:
         if self == UserException403Code.EMAIL_ALREADY_EXISTS:
@@ -14,4 +15,6 @@ class UserException403Code(Exception403CodeBase):
             return "Email not found"
         elif self == UserException403Code.INVALID_CREDENTIALS:
             return "Invalid credentials"
+        elif self == UserException403Code.USER_NOT_FOUND:
+            return "User not found"
         return self.name

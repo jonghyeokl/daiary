@@ -10,7 +10,7 @@ from app.db.session import get_db
 from app.db.models.user.user import User
 
 from app.schemas.model_dtos.user import UserModelDTO
-from app.schemas.dtos.user import UserCreateRequestDTO, UserUpdatePasswordRequestDTO
+from app.schemas.dtos.user import UserCreateRequestDTO
 
 class UserRepository:
     def __init__(self, db: AsyncSession) -> None:
@@ -30,16 +30,16 @@ class UserRepository:
 
         return UserModelDTO.from_model(user) if user else None
     
-    async def find_by_id(self, id: str) -> Optional[UserModelDTO]:
-        query = await self.db.execute(select(User).where(User.id == id))
+    async def find_by_user_id(self, user_id: str) -> Optional[UserModelDTO]:
+        query = await self.db.execute(select(User).where(User.user_id == user_id))
         user = query.scalars().one_or_none()
         return UserModelDTO.from_model(user) if user else None
     
     async def create(self, user: UserCreateRequestDTO) -> UserModelDTO:
         now = datetime.utcnow()
-        id = uuid4()
+        user_id = uuid4()
         new_user = User(
-            id=id,
+            user_id=user_id,
             name=user.name,
             email=user.email,
             hashed_password=user.hashed_password,
@@ -53,10 +53,10 @@ class UserRepository:
 
         return UserModelDTO.from_model(new_user)
     
-    async def update_password(self, user: User, dto: UserUpdatePasswordRequestDTO) -> UserModelDTO:
-        now = datetime.utcnow()
-        user.hashed_password = dto.hashed_new_password
-        user.updated_dt = now
+    async def update_by_user_id(self, user_id: str, hashed_password: str):
+        query = await self.db.execute(select(User).where(User.user_id == user_id))
+
+        user = query.scalars().first()
+        user.hashed_password = hashed_password
+
         await self.db.commit()
-        await self.db.refresh(user)
-        return UserModelDTO.from_model(user)
