@@ -13,3 +13,7 @@ class EmailNotFoundException(Custom403Exception):
 class InvalidCredentialsException(Custom403Exception):
     def __init__(self) -> None:
         super().__init__(exception_code=UserException403Code.INVALID_CREDENTIALS)
+
+class UserNotFoundException(Custom403Exception):
+    def __init__(self) -> None:
+        super().__init__(exception_code=UserException403Code.USER_NOT_FOUND)

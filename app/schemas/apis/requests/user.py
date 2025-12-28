@@ -17,3 +17,7 @@ class SignUpRequestBody(BaseModel):
             hashed_password=hash_password(self.password),
             phone_number=self.phone_number,
         )
+
+class UpdatePasswordRequestBody(BaseModel):
+    current_password: str = Field(..., description="Current password")
+    new_password: str = Field(..., description="New password")

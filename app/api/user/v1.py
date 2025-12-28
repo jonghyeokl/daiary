@@ -5,11 +5,14 @@ from fastapi import Body
 from app.exceptions.user import EmailAlreadyExistsException
 from app.exceptions.user import EmailNotFoundException
 from app.exceptions.user import InvalidCredentialsException
+from app.exceptions.user import UserNotFoundException
 from app.repositories.user import UserRepository
-from app.schemas.apis.requests.user import SignUpRequestBody
+from app.schemas.apis.requests.user import SignUpRequestBody, UpdatePasswordRequestBody
 from app.schemas.apis.responses.custom_error import CustomErrorExample
 from app.schemas.apis.responses.custom_error import CustomErrorResponse
-from app.utils.hash import verify_password
+
+from app.services.jwt import JwtService
+from app.utils.hash import verify_password, hash_password
 
 router = APIRouter()
 
@@ -39,7 +42,7 @@ async def sign_up(
 
 @router.post(
     "/login",
-    response_model=None,
+    response_model=str,
     responses = {
         403: CustomErrorResponse(
             examples=[
@@ -57,10 +60,43 @@ async def login(
     email: str = Body(..., embed=True),
     password: str = Body(..., embed=True),
     user_repository: UserRepository = Depends(UserRepository.build),
-) -> None:
+) -> str:
     user = await user_repository.find_by_email(email)
     if not user:
         raise EmailNotFoundException()
 
     if not verify_password(password, user.hashed_password):
         raise InvalidCredentialsException()
+
+    return JwtService.create_access_token(user.user_id)
+
+@router.patch(
+    "/update-password",
+    response_model=None,
+    responses = {
+        403: CustomErrorResponse(
+            examples=[
+                CustomErrorExample(
+                    exception=InvalidCredentialsException(),
+                )
+            ]
+        ).to_openapi(),
+    }
+)
+async def update_password(
+    request_body: UpdatePasswordRequestBody,
+    user_repository: UserRepository = Depends(UserRepository.build),
+    jwt_service: JwtService = Depends(JwtService.build),
+) -> None:
+    user_id = jwt_service.validate_access_token(request_body.access_token)
+    user = await user_repository.find_by_user_id(user_id)
+
+    if not user:
+        raise UserNotFoundException()
+
+    if not verify_password(request_body.current_password, user.hashed_password):
+        raise InvalidCredentialsException()
+
+    new_hashed_password = hash_password(request_body.new_password)
+
+    await user_repository.update_by_user_id(user_id, new_hashed_password)

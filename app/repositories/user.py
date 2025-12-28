@@ -30,11 +30,16 @@ class UserRepository:
 
         return UserModelDTO.from_model(user) if user else None
     
+    async def find_by_user_id(self, user_id: str) -> Optional[UserModelDTO]:
+        query = await self.db.execute(select(User).where(User.user_id == user_id))
+        user = query.scalars().one_or_none()
+        return UserModelDTO.from_model(user) if user else None
+    
     async def create(self, user: UserCreateRequestDTO) -> UserModelDTO:
         now = datetime.utcnow()
-        id = uuid4()
+        user_id = uuid4()
         new_user = User(
-            id=id,
+            user_id=user_id,
             name=user.name,
             email=user.email,
             hashed_password=user.hashed_password,
@@ -47,3 +52,11 @@ class UserRepository:
         await self.db.commit()
 
         return UserModelDTO.from_model(new_user)
+    
+    async def update_by_user_id(self, user_id: str, hashed_password: str):
+        query = await self.db.execute(select(User).where(User.user_id == user_id))
+
+        user = query.scalars().first()
+        user.hashed_password = hashed_password
+
+        await self.db.commit()

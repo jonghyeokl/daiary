@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from app.db.models.user.user import User
 
 class UserModelDTO(BaseModel):
-    id: str
+    user_id: str
     name: str
     email: str
     hashed_password: str
@@ -16,7 +16,7 @@ class UserModelDTO(BaseModel):
     @classmethod
     def from_model(cls, model: User) -> "UserModelDTO":
         return cls(
-            id=str(model.id),
+            user_id=str(model.user_id),
             name=model.name,
             email=model.email,
             hashed_password=model.hashed_password,
