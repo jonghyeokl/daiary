@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Body
@@ -12,6 +14,7 @@ from app.schemas.apis.responses.custom_error import CustomErrorExample
 from app.schemas.apis.responses.custom_error import CustomErrorResponse
 
 from app.services.jwt import JwtService
+from app.utils.jwt_bearer import get_access_token
 from app.utils.hash import verify_password, hash_password
 
 router = APIRouter()
@@ -85,11 +88,11 @@ async def login(
     }
 )
 async def update_password(
+    access_token: Annotated[str, Depends(get_access_token)],
     request_body: UpdatePasswordRequestBody,
     user_repository: UserRepository = Depends(UserRepository.build),
-    jwt_service: JwtService = Depends(JwtService.build),
 ) -> None:
-    user_id = jwt_service.validate_access_token(request_body.access_token)
+    user_id = JwtService().validate_access_token(access_token)
     user = await user_repository.find_by_user_id(user_id)
 
     if not user:
