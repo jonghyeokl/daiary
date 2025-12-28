@@ -6,10 +6,13 @@ from app.exceptions.user import EmailAlreadyExistsException
 from app.exceptions.user import EmailNotFoundException
 from app.exceptions.user import InvalidCredentialsException
 from app.repositories.user import UserRepository
-from app.schemas.apis.requests.user import SignUpRequestBody
+from app.schemas.apis.requests.user import SignUpRequestBody, UpdatePasswordRequestBody
 from app.schemas.apis.responses.custom_error import CustomErrorExample
 from app.schemas.apis.responses.custom_error import CustomErrorResponse
-from app.utils.hash import verify_password
+
+from app.core.security import create_access_token
+from app.core.dependencies import get_current_user
+from app.utils.hash import verify_password, hash_password
 
 router = APIRouter()
 
@@ -39,7 +42,6 @@ async def sign_up(
 
 @router.post(
     "/login",
-    response_model=None,
     responses = {
         403: CustomErrorResponse(
             examples=[
@@ -57,10 +59,47 @@ async def login(
     email: str = Body(..., embed=True),
     password: str = Body(..., embed=True),
     user_repository: UserRepository = Depends(UserRepository.build),
-) -> None:
+):
     user = await user_repository.find_by_email(email)
     if not user:
         raise EmailNotFoundException()
 
     if not verify_password(password, user.hashed_password):
         raise InvalidCredentialsException()
+
+    access_token = create_access_token(user.id)
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.patch(
+    "/update-password",
+    response_model=None,
+    responses = {
+        403: CustomErrorResponse(
+            examples=[
+                CustomErrorExample(
+                    exception=InvalidCredentialsException(),
+                )
+            ]
+        ).to_openapi(),
+    }
+)
+async def update_password(
+    request_body: UpdatePasswordRequestBody,
+    user_repository: UserRepository = Depends(UserRepository.build),
+    token_payload: dict = Depends(get_current_user),
+) -> None:
+
+    user_id = token_payload.get("sub")
+    user = await user_repository.find_by_id(user_id)
+    if not user:
+        raise InvalidCredentialsException()
+    
+    update_password_request_dto = request_body.to_update_password_request_dto()
+
+    if not verify_password(update_password_request_dto.current_password, user.hashed_password):
+        raise InvalidCredentialsException()
+    
+    new_hashed_password = hash_password(update_password_request_dto.new_password)
+    user.hashed_password = new_hashed_password
+    await user_repository.update(user)
+    return None

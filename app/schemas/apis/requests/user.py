@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 from app.schemas.dtos.user import UserCreateRequestDTO
+from app.schemas.dtos.user import UserUpdatePasswordRequestDTO
 from app.utils.hash import hash_password
 
 class SignUpRequestBody(BaseModel):
@@ -16,4 +17,14 @@ class SignUpRequestBody(BaseModel):
             email=self.email,
             hashed_password=hash_password(self.password),
             phone_number=self.phone_number,
+        )
+
+class UpdatePasswordRequestBody(BaseModel):
+    current_password: str = Field(..., description="Current password")
+    new_password: str = Field(..., description="New password")
+
+    def to_update_password_request_dto(self) -> UserUpdatePasswordRequestDTO:
+        return UserUpdatePasswordRequestDTO(
+            current_password=self.current_password,
+            hashed_new_password=hash_password(self.new_password),
         )
