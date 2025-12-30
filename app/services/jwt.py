@@ -2,7 +2,7 @@ from datetime import datetime
 from datetime import timedelta
 from typing import Any
 from typing import Dict
-
+from uuid import UUID
 import jwt
 from fastapi import HTTPException
 
@@ -49,14 +49,14 @@ class JwtService:
 
         return self._create_jwt_token(payload, conf.REFRESH_TOKEN_SECRET_KEY)
 
-    def validate_access_token(self, access_token: str) -> str:
+    def validate_access_token(self, access_token: str) -> UUID:
         try:
             user_id = self._decode_jwt_token(
                 access_token, conf.ACCESS_TOKEN_SECRET_KEY
             )["user_id"]
             if user_id is None:
                 raise HTTPException(status_code=401, detail="Token invalid")
-            return user_id
+            return UUID(user_id)
         except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=401, detail="Token expired")
         except jwt.InvalidTokenError:

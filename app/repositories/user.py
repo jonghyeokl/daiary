@@ -1,7 +1,7 @@
 from fastapi import Depends
 from datetime import datetime
 from typing import Optional
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -30,7 +30,7 @@ class UserRepository:
 
         return UserModelDTO.from_model(user) if user else None
     
-    async def find_by_user_id(self, user_id: str) -> Optional[UserModelDTO]:
+    async def find_by_user_id(self, user_id: UUID) -> Optional[UserModelDTO]:
         query = await self.db.execute(select(User).where(User.user_id == user_id))
         user = query.scalars().one_or_none()
         return UserModelDTO.from_model(user) if user else None
@@ -53,7 +53,7 @@ class UserRepository:
 
         return UserModelDTO.from_model(new_user)
     
-    async def update_by_user_id(self, user_id: str, hashed_password: str):
+    async def update_by_user_id(self, user_id: UUID, hashed_password: str):
         query = await self.db.execute(select(User).where(User.user_id == user_id))
 
         user = query.scalars().first()
