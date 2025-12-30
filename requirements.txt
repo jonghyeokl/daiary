@@ -5,10 +5,11 @@ asyncpg
 python-dotenv
 alembic
 greenlet
-passlib[bcrypt]==1.7.4
+passlib[bcrypt]>=1.7.4
 orjson==3.9.14
 asyncpg
-passlib[bcrypt]>=1.7.4
 bcrypt==3.2.2
-pydantic==1.10.17
+pydantic>=2.7.0
+pydantic-settings
 PyJWT==2.8.0
+google-genai

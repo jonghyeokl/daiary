@@ -3,7 +3,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.exceptions.custom_exception import CustomException
 
@@ -21,6 +21,8 @@ class CustomErrorExample:
 
 
 class CustomErrorResponse(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     examples: List[CustomErrorExample]
 
     def to_openapi(self) -> Dict[str, Any]:
@@ -41,6 +43,3 @@ class CustomErrorResponse(BaseModel):
                 },
             }
         }
-
-    class Config:
-        arbitrary_types_allowed = True
