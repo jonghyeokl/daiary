@@ -10,6 +10,7 @@ class MessageCreateRequestDTO:
     chat_id: UUID
     content: str
     role: Role
+    message_id: Optional[UUID] = None
     parent_message_id: Optional[UUID] = None
 
 @dataclass

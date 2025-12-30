@@ -20,7 +20,7 @@ class MessageRepository:
     async def create(self, message: MessageCreateRequestDTO) -> MessageModelDTO:
         now = datetime.utcnow()
         new_message = Message(
-            message_id=uuid4(),
+            message_id=message.message_id if message.message_id else uuid4(),
             chat_id=message.chat_id,
             parent_message_id=message.parent_message_id,
             content=message.content,
@@ -36,5 +36,5 @@ class MessageRepository:
     
     async def get_by_message_id(self, message_id: UUID) -> MessageModelDTO:
         query = await self.db.execute(select(Message).where(Message.message_id == message_id))
-        message = query.scalars().one_or_none()
-        return MessageModelDTO.from_model(message) if message else None
+        message = query.scalars().first()
+        return MessageModelDTO.from_model(message)
