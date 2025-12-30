@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Body
 
-from app.schemas.dtos.message import MessageModelDTO
+from app.schemas.model_dtos.message import MessageModelDTO
 from app.services.jwt import JwtService
 from app.services.chat import ChatService
 
