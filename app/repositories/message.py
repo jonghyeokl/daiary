@@ -2,7 +2,9 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime
-from uuid import uuid4, UUID
+from uuid import uuid4
+from uuid import UUID
+from typing import List
 
 from app.db.session import get_db
 from app.schemas.dtos.message import MessageCreateRequestDTO
@@ -38,3 +40,8 @@ class MessageRepository:
         query = await self.db.execute(select(Message).where(Message.message_id == message_id))
         message = query.scalars().first()
         return MessageModelDTO.from_model(message)
+    
+    async def get_all_messages_by_chat_id(self, chat_id: UUID) -> List[MessageModelDTO]:
+        query = await self.db.execute(select(Message).where(Message.chat_id == chat_id).order_by(Message.created_dt.asc()))
+        messages = query.scalars().all()
+        return [MessageModelDTO.from_model(message) for message in messages]

@@ -43,10 +43,11 @@ class MessageService:
         messages = []
         current_message = await self.message_repository.get_by_message_id(message_id)
         iterations = 0
-        while current_message.parent_message_id is not None and iterations < 20:
+        while current_message.parent_message_id is not None and iterations < 19:
             messages.append(MessageHistoryDTO(role=current_message.role.name, content=current_message.content))
             current_message = await self.message_repository.get_by_message_id(UUID(current_message.parent_message_id))
             iterations += 1
+        messages.append(MessageHistoryDTO(role=current_message.role.name, content=current_message.content))
         return messages[::-1]
     
     async def get_from_genai(self, prev_messages: List[MessageHistoryDTO]) -> str:
@@ -70,14 +71,15 @@ class MessageService:
             "contents": contents,
             "generationConfig": {
                 "temperature": 0.7,
-                "maxOutputTokens": 100
+                "maxOutputTokens": 1000
             }
         }
 
-        response = await requests.post(url, headers=headers, json=data)
+        response = requests.post(url, headers=headers, json=data)
 
         if response.status_code != 200:
+            print(response.text)
             raise HTTPException(status_code=response.status_code, detail="genai api error")
         
-        result = await response.json()
+        result = response.json()
         return result["candidates"][0]["content"]["parts"][0]["text"]

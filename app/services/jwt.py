@@ -9,7 +9,7 @@ from fastapi import HTTPException
 from app.resources.config import conf
 
 class JwtService:
-    ACCESS_TOKEN_EXPIRATION = timedelta(minutes=15)
+    ACCESS_TOKEN_EXPIRATION = timedelta(minutes=60)
     REFRESH_TOKEN_EXPIRATION = timedelta(days=30)
 
     @classmethod

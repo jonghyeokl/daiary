@@ -1,8 +1,10 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from typing import List
 from datetime import datetime
-from uuid import uuid4, UUID
+from uuid import uuid4
+from uuid import UUID
 
 from app.db.session import get_db
 from app.schemas.dtos.chat import ChatCreateRequestDTO
@@ -37,3 +39,8 @@ class ChatRepository:
         query = await self.db.execute(select(Chat).where(Chat.chat_id == chat_id))
         chat = query.scalars().first()
         return ChatModelDTO.from_model(chat)
+
+    async def get_all_chats_by_user_id(self, user_id: UUID) -> List[ChatModelDTO]:
+        query = await self.db.execute(select(Chat).where(Chat.user_id == user_id))
+        chats = query.scalars().all()
+        return [ChatModelDTO.from_model(chat) for chat in chats]
