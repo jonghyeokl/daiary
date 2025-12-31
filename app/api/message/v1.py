@@ -28,15 +28,3 @@ async def get_from_genai_and_insert_message(
     JwtService().validate_access_token(access_token)
     
     return await message_service.get_from_genai_and_insert_message(request_body.to_message_create_request_dto())
-
-@router.get(
-    "/",
-    response_model=List[MessageModelDTO],
-)
-async def get_all_messages(
-    access_token: Annotated[str, Depends(get_access_token)],
-    chat_id: str,
-    message_repository: MessageRepository = Depends(MessageRepository.build),
-) -> List[MessageModelDTO]:
-    JwtService().validate_access_token(access_token)
-    return await message_repository.get_all_messages_by_chat_id(UUID(chat_id))

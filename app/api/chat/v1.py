@@ -7,9 +7,12 @@ from fastapi import Body
 
 from app.schemas.model_dtos.chat import ChatModelDTO
 from app.schemas.model_dtos.message import MessageModelDTO
+from app.schemas.apis.responses.chat import MessagesDiaryResponse
 from app.services.jwt import JwtService
 from app.services.chat import ChatService
 from app.repositories.chat import ChatRepository
+from app.repositories.message import MessageRepository
+from app.repositories.diary import DiaryRepository
 from app.utils.jwt_bearer import get_access_token
 
 router = APIRouter()
@@ -37,3 +40,18 @@ async def get_all_chats(
 ) -> List[ChatModelDTO]:
     user_id = JwtService().validate_access_token(access_token)
     return await chat_repository.get_all_chats_by_user_id(user_id)
+
+@router.get(
+    "/get-all-messages-and-diary",
+    response_model=MessagesDiaryResponse,
+)
+async def get_all_messages_and_diary(
+    access_token: Annotated[str, Depends(get_access_token)],
+    chat_id: str,
+    message_repository: MessageRepository = Depends(MessageRepository.build),
+    diary_repository: DiaryRepository = Depends(DiaryRepository.build),
+) -> MessagesDiaryResponse:
+    JwtService().validate_access_token(access_token)
+    messages = await message_repository.get_all_messages_by_chat_id(UUID(chat_id))
+    diary = await diary_repository.find_diary_by_chat_id(UUID(chat_id))
+    return MessagesDiaryResponse(messages=messages, diary=diary)
