@@ -7,13 +7,14 @@ from sqlalchemy import Column
 from sqlalchemy import SmallInteger
 from sqlalchemy import DateTime
 from sqlalchemy import String
+from sqlalchemy import ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 
 class Message(Base):
     __tablename__ = "messages"
     
     message_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    chat_id = Column(UUID(as_uuid=True), nullable=False)
+    chat_id = Column(ForeignKey("chats.chat_id"), nullable=False)
 
     parent_message_id = Column(UUID(as_uuid=True), nullable=True)
     content = Column(String, nullable=False)
