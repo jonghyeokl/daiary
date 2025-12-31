@@ -53,7 +53,7 @@ class UserRepository:
 
         return UserModelDTO.from_model(new_user)
     
-    async def update_by_user_id(self, user_id: UUID, hashed_password: str):
+    async def update_by_user_id(self, user_id: UUID, hashed_password: str) -> None:
         query = await self.db.execute(select(User).where(User.user_id == user_id))
 
         user = query.scalars().first()
