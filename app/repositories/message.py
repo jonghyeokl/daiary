@@ -24,7 +24,7 @@ class MessageRepository:
             chat_id=message.chat_id,
             parent_message_id=message.parent_message_id,
             content=message.content,
-            role=message.role,
+            role=message.role.value,
             created_dt=now,
             updated_dt=now,
         )
