@@ -102,4 +102,4 @@ async def update_password(
 
     new_hashed_password = hash_password(request_body.new_password)
 
-    await user_repository.update_by_user_id(user_id, new_hashed_password)
+    await user_repository.update_by_user_id(user_id=user_id, hashed_password=new_hashed_password)
