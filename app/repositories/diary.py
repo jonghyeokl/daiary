@@ -1,11 +1,14 @@
 from fastapi import Depends
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from uuid import UUID
+from uuid import uuid4
 from typing import Optional
 
 from app.db.session import get_db
 from app.schemas.dtos.diary import DiaryUpdateRequestDTO
+from app.schemas.dtos.diary import DiaryCreateRequestDTO
 from app.schemas.model_dtos.diary import DiaryModelDTO
 from app.db.models.diary.diary import Diary
 
@@ -29,3 +32,17 @@ class DiaryRepository:
         diary.body = diary_update_request_dto.body
 
         await self.db.commit()
+    
+    async def create(self, diary_create_request_dto: DiaryCreateRequestDTO) -> DiaryModelDTO:
+        now = datetime.utcnow()
+        diary = Diary(
+            diary_id=uuid4(),
+            chat_id=diary_create_request_dto.chat_id,
+            title=diary_create_request_dto.title,
+            body=diary_create_request_dto.body,
+            created_dt=now,
+            updated_dt=now,
+        )
+        self.db.add(diary)
+        await self.db.commit()
+        return DiaryModelDTO.from_model(diary)
