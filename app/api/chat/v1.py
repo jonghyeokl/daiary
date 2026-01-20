@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Body
+from fastapi import HTTPException
 
 from app.schemas.model_dtos.chat import ChatModelDTO
 from app.schemas.model_dtos.message import MessageModelDTO
@@ -25,7 +26,7 @@ async def create_chat_and_initial_message(
     access_token: Annotated[str, Depends(get_access_token)],
     chat_date: str = Body(..., embed=True),
     chat_service: ChatService = Depends(ChatService.build),
-) -> None:
+) -> MessageModelDTO:
     user_id = JwtService().validate_access_token(access_token)
 
     return await chat_service.create_chat_and_initial_message(user_id=user_id, chat_date=chat_date)
@@ -55,3 +56,16 @@ async def get_all_messages_and_diary(
     messages = await message_repository.get_all_messages_by_chat_id(UUID(chat_id))
     diary = await diary_repository.find_diary_by_chat_id(UUID(chat_id))
     return MessagesDiaryResponse(messages=messages, diary=diary)
+
+@router.patch(
+    "/",
+    response_model=None,
+)
+async def rating(
+    access_token: Annotated[str, Depends(get_access_token)],
+    chat_id: str,
+    rating: int = Body(..., embed=True, ge=1, le=10),
+    chat_repository: ChatRepository = Depends(ChatRepository.build),
+) -> None:
+    JwtService().validate_access_token(access_token)
+    await chat_repository.rating(chat_id=UUID(chat_id), rating=rating)

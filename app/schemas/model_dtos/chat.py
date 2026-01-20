@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -9,6 +10,7 @@ class ChatModelDTO(BaseModel):
     user_id: str
     root_message_id: str
     chat_date: str
+    rating: Optional[int] = None
     created_dt: datetime
     updated_dt: datetime
 
@@ -19,6 +21,7 @@ class ChatModelDTO(BaseModel):
             user_id=str(model.user_id),
             root_message_id=str(model.root_message_id),
             chat_date=model.chat_date,
+            rating=model.rating,
             created_dt=model.created_dt,
             updated_dt=model.updated_dt,
         )

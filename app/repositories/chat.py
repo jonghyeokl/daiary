@@ -26,6 +26,7 @@ class ChatRepository:
             user_id=chat.user_id,
             root_message_id=uuid4(),
             chat_date=chat.chat_date,
+            rating=None,
             created_dt=now,
             updated_dt=now,
         )
@@ -44,3 +45,10 @@ class ChatRepository:
         query = await self.db.execute(select(Chat).where(Chat.user_id == user_id))
         chats = query.scalars().all()
         return [ChatModelDTO.from_model(chat) for chat in chats]
+    
+    async def rating(self, chat_id: UUID, rating: int) -> None:
+        query = await self.db.execute(select(Chat).where(Chat.chat_id == chat_id))
+        chat = query.scalars().first()
+        chat.rating = rating
+        chat.updated_dt = datetime.utcnow()
+        await self.db.commit()
