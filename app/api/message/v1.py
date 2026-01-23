@@ -25,6 +25,5 @@ async def get_from_genai_and_insert_message(
     request_body: InsertMessageRequestBody,
     message_service: MessageService = Depends(MessageService.build),
 ) -> MessageModelDTO:
-    JwtService().validate_access_token(access_token)
-    
-    return await message_service.get_from_genai_and_insert_message(request_body.to_message_create_request_dto())
+    user_id = JwtService().validate_access_token(access_token)
+    return await message_service.get_from_genai_and_insert_message(request_body.to_message_create_request_dto(), user_id)

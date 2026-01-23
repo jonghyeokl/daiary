@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 from app.db.session import get_db
 from app.db.models.user.user import User
-
+from app.db.models.setting.setting import Setting
 from app.schemas.model_dtos.user import UserModelDTO
 from app.schemas.dtos.user import UserCreateRequestDTO
 
@@ -49,6 +49,16 @@ class UserRepository:
         )
         self.db.add(new_user)
         
+        new_setting = Setting(
+            setting_id=uuid4(),
+            user_id=user_id,
+            chat_manner=1,
+            diary_font=1,
+            created_dt=now,
+            updated_dt=now
+        )
+        self.db.add(new_setting)
+
         await self.db.commit()
 
         return UserModelDTO.from_model(new_user)
